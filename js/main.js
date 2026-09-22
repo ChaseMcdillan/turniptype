@@ -1,45 +1,93 @@
-import { initToolbar, state } from "./ui.js";
+import { initToolbar, state as config } from "./ui.js";
+import { createEngine } from "./engine.js";
 
-// For now: log state changes and show a placeholder sentence.
-// Milestone 2 will replace this with the real typing engine.
+const engine = createEngine();
 
 const textEl = document.getElementById("text");
 const inputEl = document.getElementById("input");
 const overlay = document.getElementById("overlay");
 const startBtn = document.getElementById("start-btn");
 const resetBtn = document.getElementById("reset");
+const wpmEl = document.getElementById("wpm");
+const accuracyEl = document.getElementById("accuracy");
+const timeEl = document.getElementById("time");
+const recordEl = document.getElementById("record");
 
-function renderPlaceholder() {
-  textEl.textContent =
-    state.mode === "custom"
-      ? "custom mode — paste your own text soon."
-      : `placeholder — mode: ${state.mode}, option: ${state.option}, lang: ${state.language}`;
+let tickInterval = null;
+
+// ── Rendering ──
+
+function renderText() {
+  const s = engine.getState();
+  if (!s) return;
+  const typed = s.typed;
+  textEl.innerHTML = s.text
+    .split("")
+    .map((ch, i) => {
+      const cls =
+        i < typed.length
+          ? typed[i] === ch
+            ? "correct"
+            : "wrong"
+          : i === typed.length
+          ? "current"
+          : "";
+      const display = ch === " " ? "&nbsp;" : ch;
+      return `<span class="${cls}">${display}</span>`;
+    })
+    .join("");
+}
+
+function renderStats() {
+  const s = engine.stats();
+  wpmEl.textContent = s.wpm;
+  accuracyEl.textContent = s.accuracy;
+  timeEl.textContent = s.time;
+}
+
+function renderAll() {
+  renderText();
+  renderStats();
+}
+
+// ── Flow ──
+
+function loadNewTest() {
+  clearInterval(tickInterval);
+  engine.load({ ...config });
   inputEl.value = "";
+  inputEl.disabled = true;
+  overlay.hidden = false;
+  renderAll();
 }
 
-function handleChange(next) {
-  console.log("config changed:", next);
-  renderPlaceholder();
-}
-
-// Start test (for now just focuses the input)
 function startTest() {
   overlay.hidden = true;
   inputEl.disabled = false;
   inputEl.focus();
+  engine.start();
+  tickInterval = setInterval(() => {
+    engine.tick();
+    renderAll();
+  }, 100);
 }
 
 function resetTest() {
-  overlay.hidden = false;
-  inputEl.disabled = true;
-  inputEl.value = "";
-  renderPlaceholder();
+  loadNewTest();
 }
+
+// ── Events ──
+
+inputEl.addEventListener("input", () => {
+  const s = engine.getState();
+  if (!s) return;
+  if (!s.startedAt) startTest();
+  engine.type(inputEl.value);
+});
 
 startBtn.addEventListener("click", startTest);
 resetBtn.addEventListener("click", resetTest);
 
-// Keyboard shortcuts
 document.addEventListener("keydown", (e) => {
   if (e.key === "Tab") {
     e.preventDefault();
@@ -51,6 +99,18 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Boot
-initToolbar(handleChange);
-renderPlaceholder();
+// ── Boot ──
+
+// engine emits state changes → re-render
+engine.onChange(() => {
+  renderAll();
+  const s = engine.getState();
+  if (s?.finished) {
+    clearInterval(tickInterval);
+    inputEl.disabled = true;
+    console.log("test finished:", engine.stats());
+  }
+});
+
+initToolbar(loadNewTest);
+loadNewTest();

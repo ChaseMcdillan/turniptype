@@ -1,1 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TurnipType — a minimal typing test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1 class="logo">turnip<span>type</span></h1>
+      <p class="tagline">a minimal typing test</p>
+    </header>
 
+    <!-- Mode selector bar -->
+    <nav class="toolbar" id="toolbar" aria-label="Test mode">
+      <div class="group" id="group-mode">
+        <!-- filled by ui.js -->
+      </div>
+      <div class="divider" aria-hidden="true"></div>
+      <div class="group" id="group-option">
+        <!-- filled by ui.js -->
+      </div>
+      <div class="spacer"></div>
+      <div class="group" id="group-language">
+        <!-- filled by ui.js -->
+      </div>
+    </nav>
+
+    <!-- Stats -->
+    <section class="stats">
+      <div class="stat">
+        <span class="stat-value" id="wpm">0</span>
+        <span class="stat-label">wpm</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="accuracy">100</span>
+        <span class="stat-label">accuracy</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="time">0</span>
+        <span class="stat-label">seconds</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="record">—</span>
+        <span class="stat-label">best</span>
+      </div>
+    </section>
+
+    <!-- Typing area -->
+    <div class="stage">
+      <p id="text" class="text"></p>
+      <div class="overlay" id="overlay" hidden>
+        <button class="overlay-btn" id="start-btn">start test</button>
+        <p class="overlay-hint">or press <kbd>tab</kbd></p>
+      </div>
+    </div>
+
+    <input
+      id="input"
+      class="input"
+      type="text"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      placeholder="start typing…"
+      aria-label="typing input"
+      disabled
+    />
+
+    <footer class="footer">
+      <button id="reset" class="reset" type="button">restart</button>
+      <span class="hint">
+        <kbd>tab</kbd> focus · <kbd>esc</kbd> restart · <kbd>enter</kbd> next
+      </span>
+    </footer>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

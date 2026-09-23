@@ -220,6 +220,9 @@ function loadNewTest() {
 }
 
 // ── Rendering ──
+// Words are inline-block so they never break mid-word.
+// The space BETWEEN words lives outside .word so it renders as a real gap
+// and gives the browser a break opportunity.
 function buildTextHTML(text, typed) {
   const words = text.split(" ");
   let charIndex = 0;
@@ -235,15 +238,17 @@ function buildTextHTML(text, typed) {
       html += `<span class="char ${cls}">${ch}</span>`;
       charIndex++;
     }
+    html += `</span>`;
+
     if (wi < words.length - 1) {
+      // the space belongs to the text position, but sits OUTSIDE the word span
       const ch = " ";
       let cls = "";
       if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
       else if (charIndex === typed.length) cls = "current";
-      html += `<span class="char ${cls}"> </span>`;
+      html += `<span class="char space ${cls}">&nbsp;</span>`;
       charIndex++;
     }
-    html += `</span>`;
   });
 
   return html;
@@ -390,7 +395,6 @@ function showResults() {
   $("r-wrong").textContent = s.wrong;
   $("r-time").textContent = s.time;
 
-  // personal best?
   const prev = getRecord();
   const isBest = s.wpm > 0 && (prev === null || s.wpm > prev);
   if (isBest) {

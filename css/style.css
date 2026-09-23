@@ -19,9 +19,9 @@ body {
   color: var(--text);
   min-height: 100vh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 4rem 1.5rem 6rem;
+  padding: 2rem 1.5rem;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -127,11 +127,26 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* ── Stage: plain flow, no clipping ── */
+/* ── Stage: 5-line window, smooth slide ── */
 
 .stage {
   position: relative;
-  min-height: 140px;
+  height: 12rem;               /* 5 lines × 2.4rem line-height */
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 12%,
+    #000 88%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 12%,
+    #000 88%,
+    transparent 100%
+  );
 }
 
 .text {
@@ -142,6 +157,8 @@ body {
   user-select: none;
   letter-spacing: -0.01em;
   word-break: break-word;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .text span { transition: color 0.05s linear; }
@@ -164,6 +181,7 @@ body {
   background: rgba(14, 14, 17, 0.85);
   backdrop-filter: blur(4px);
   border-radius: 10px;
+  z-index: 2;
 }
 .overlay[hidden] { display: none; }
 .overlay-btn {

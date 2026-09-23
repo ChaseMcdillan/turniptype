@@ -179,7 +179,8 @@ function loadNewTest() {
   inputEl.value = "";
   inputEl.disabled = true;
   overlay.hidden = false;
-  window.scrollTo({ top: 0 });
+  textEl.style.transform = "translateY(0)";
+  textEl.dataset.shift = "0";
   renderAll();
 }
 
@@ -197,6 +198,32 @@ function renderText() {
       return `<span class="${cls}">${display}</span>`;
     })
     .join("");
+
+  scrollCurrentIntoView();
+}
+
+function scrollCurrentIntoView() {
+  const cur = textEl.querySelector(".current");
+  if (!cur) return;
+
+  const stageEl = document.querySelector(".stage");
+  const lineHeight = parseFloat(getComputedStyle(textEl).lineHeight) || 38;
+  const stageRect = stageEl.getBoundingClientRect();
+  const curRect = cur.getBoundingClientRect();
+
+  // distance from the top of the visible window to the current char
+  const offset = curRect.top - stageRect.top;
+
+  // keep the current line on line 2 of the window
+  const targetY = lineHeight * 1;
+  let shift = parseFloat(textEl.dataset.shift || "0");
+
+  if (offset > targetY) shift += offset - targetY;
+  else if (offset < 0) shift = Math.max(0, shift + offset);
+
+  shift = Math.max(0, shift);
+  textEl.dataset.shift = String(shift);
+  textEl.style.transform = `translateY(-${shift}px)`;
 }
 
 function computeStats() {

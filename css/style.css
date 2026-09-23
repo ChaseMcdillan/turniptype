@@ -33,7 +33,6 @@ body {
   gap: 2rem;
 }
 
-/* Header */
 .header { display: flex; flex-direction: column; gap: 0.35rem; }
 .logo {
   font-family: "JetBrains Mono", monospace;
@@ -44,7 +43,6 @@ body {
 .logo span { color: var(--indigo); }
 .tagline { font-size: 0.8rem; color: var(--muted); }
 
-/* Toolbar */
 .toolbar {
   display: flex;
   align-items: center;
@@ -59,7 +57,6 @@ body {
 .divider { width: 1px; height: 22px; background: var(--border); }
 .spacer { flex: 1; }
 
-/* Chips */
 .chip {
   font-family: "Inter", sans-serif;
   font-size: 0.82rem;
@@ -88,7 +85,6 @@ body {
   padding: 0.35rem 0.6rem;
 }
 
-/* Select */
 .select {
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;
@@ -102,7 +98,6 @@ body {
 }
 .select:focus { border-color: var(--indigo); }
 
-/* Stats */
 .stats {
   display: flex;
   gap: 2.5rem;
@@ -123,7 +118,8 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* Stage */
+/* ── Stage ── */
+
 .stage {
   position: relative;
   height: 12rem;
@@ -132,6 +128,10 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
 }
 
+/* Everything here is plain inline flow. Words are inline spans with
+   nowrap so they don't break mid-word. The inter-word space is a single
+   normal space character (no fancy width tricks) — this gives natural
+   spacing and natural line-breaking. */
 .text {
   font-family: "JetBrains Mono", monospace;
   font-size: 1.35rem;
@@ -139,18 +139,28 @@ body {
   color: var(--muted);
   user-select: none;
   letter-spacing: -0.01em;
-  overflow-wrap: break-word;
-  word-break: normal;
   white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 
-/* Words are inline-block units — no mid-word breaks.
-   The space BETWEEN words is a .char.space sitting outside the .word span. */
-.text .word { display: inline-block; white-space: nowrap; }
-.text .char { display: inline; }
-.text .char.space { display: inline; white-space: pre; }
+.text .word {
+  display: inline;
+  white-space: nowrap;
+}
+
+.text .char {
+  display: inline;
+  white-space: pre;
+}
+
+/* The inter-word space is a real space character, at natural width */
+.text .char.space {
+  display: inline;
+  white-space: pre;
+}
 
 .text .char.correct { color: var(--indigo-soft); }
 .text .char.wrong   { color: var(--error); }
@@ -159,7 +169,6 @@ body {
   padding-bottom: 1px;
 }
 
-/* Start overlay */
 .overlay {
   position: absolute;
   inset: 0;
@@ -189,7 +198,6 @@ body {
 .overlay-btn:hover { background: var(--indigo-soft); }
 .overlay-hint { font-size: 0.75rem; color: var(--muted); }
 
-/* Input */
 .input {
   font-family: "JetBrains Mono", monospace;
   font-size: 1rem;
@@ -206,7 +214,6 @@ body {
 .input:focus { border-color: var(--indigo); }
 .input:disabled { opacity: 0.4; }
 
-/* Footer */
 .footer {
   display: flex;
   align-items: center;
@@ -359,10 +366,4 @@ body {
   .grid { grid-template-columns: repeat(2, 1fr); }
   .big-value { font-size: 2.5rem; }
   .results-head { gap: 1.5rem; }
-}
-.text .word { display: inline-block; white-space: nowrap; margin-right: -0.05em; }
-.text .char.space {
-  display: inline;
-  white-space: pre;
-  letter-spacing: -0.05em;
 }

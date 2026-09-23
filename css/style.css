@@ -118,8 +118,6 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* ── Stage ── */
-
 .stage {
   position: relative;
   height: 12rem;
@@ -128,10 +126,6 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
 }
 
-/* Everything here is plain inline flow. Words are inline spans with
-   nowrap so they don't break mid-word. The inter-word space is a single
-   normal space character (no fancy width tricks) — this gives natural
-   spacing and natural line-breaking. */
 .text {
   font-family: "JetBrains Mono", monospace;
   font-size: 1.35rem;
@@ -146,18 +140,7 @@ body {
   will-change: transform;
 }
 
-.text .word {
-  display: inline;
-  white-space: nowrap;
-}
-
 .text .char {
-  display: inline;
-  white-space: pre;
-}
-
-/* The inter-word space is a real space character, at natural width */
-.text .char.space {
   display: inline;
   white-space: pre;
 }
@@ -262,8 +245,6 @@ body {
   transition: border-color 0.15s;
 }
 .credit a:hover { border-color: var(--indigo-soft); }
-
-/* ── Results ── */
 
 .results {
   display: flex;

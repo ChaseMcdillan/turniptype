@@ -213,33 +213,23 @@ function loadNewTest() {
   renderAll();
 }
 
+// ── Rendering ──
+// Simple per-character rendering. No word spans. Normal prose wrapping.
 function buildTextHTML(text, typed) {
-  const words = text.split(" ");
-  let charIndex = 0;
   let html = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    let cls = "";
+    if (i < typed.length) cls = typed[i] === ch ? "correct" : "wrong";
+    else if (i === typed.length) cls = "current";
 
-  words.forEach((word, wi) => {
-    html += `<span class="word">`;
-    for (let i = 0; i < word.length; i++) {
-      const ch = word[i];
-      let cls = "";
-      if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
-      else if (charIndex === typed.length) cls = "current";
+    if (ch === " ") {
+      // real non-breaking space so it renders and doesn't collapse
+      html += `<span class="char space ${cls}">&nbsp;</span>`;
+    } else {
       html += `<span class="char ${cls}">${ch}</span>`;
-      charIndex++;
     }
-    html += `</span>`;
-
-    if (wi < words.length - 1) {
-      const ch = " ";
-      let cls = "";
-      if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
-      else if (charIndex === typed.length) cls = "current";
-      html += `<span class="char space ${cls}"> </span>`;
-      charIndex++;
-    }
-  });
-
+  }
   return html;
 }
 
@@ -258,7 +248,7 @@ function scrollCurrentIntoView() {
   const curRect = cur.getBoundingClientRect();
 
   const offset = curRect.top - stageRect.top;
-  const targetY = lineHeight * 1;
+  const targetY = lineHeight;
   let shift = parseFloat(textEl.dataset.shift || "0");
 
   if (offset > targetY) shift += offset - targetY;

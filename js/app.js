@@ -214,22 +214,45 @@ function loadNewTest() {
 }
 
 // ── Rendering ──
-// Simple per-character rendering. No word spans. Normal prose wrapping.
+// Words are grouped in a plain inline span (NOT inline-block) with nowrap.
+// The space between words is a normal space character OUTSIDE the word span.
+// Result: browser breaks at spaces, never inside a word, no fake indents.
 function buildTextHTML(text, typed) {
   let html = "";
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    let cls = "";
-    if (i < typed.length) cls = typed[i] === ch ? "correct" : "wrong";
-    else if (i === typed.length) cls = "current";
+  let i = 0;
 
-    if (ch === " ") {
-      // real non-breaking space so it renders and doesn't collapse
-      html += `<span class="char space ${cls}">&nbsp;</span>`;
-    } else {
+  while (i < text.length) {
+    // collect a word
+    let word = "";
+    while (i < text.length && text[i] !== " ") {
+      word += text[i];
+      i++;
+    }
+
+    // render the word with per-char spans
+    html += `<span class="word">`;
+    for (let j = 0; j < word.length; j++) {
+      const ch = word[j];
+      const idx = i - word.length + j;
+      let cls = "";
+      if (idx < typed.length) cls = typed[idx] === ch ? "correct" : "wrong";
+      else if (idx === typed.length) cls = "current";
       html += `<span class="char ${cls}">${ch}</span>`;
     }
+    html += `</span>`;
+
+    // the space after the word (if any)
+    if (i < text.length) {
+      const idx = i;
+      const ch = " ";
+      let cls = "";
+      if (idx < typed.length) cls = typed[idx] === ch ? "correct" : "wrong";
+      else if (idx === typed.length) cls = "current";
+      html += `<span class="char ${cls}"> </span>`;
+      i++;
+    }
   }
+
   return html;
 }
 

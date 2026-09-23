@@ -126,6 +126,7 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
 }
 
+/* .text is a normal wrapping paragraph. Words break at spaces like prose. */
 .text {
   font-family: "JetBrains Mono", monospace;
   font-size: 1.35rem;
@@ -135,14 +136,15 @@ body {
   letter-spacing: -0.01em;
   white-space: normal;
   word-break: normal;
-  overflow-wrap: normal;
+  overflow-wrap: break-word;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 
+/* Chars are inline with no white-space trickery — the container handles wrapping */
 .text .char {
   display: inline;
-  white-space: pre;
+  white-space: normal;
 }
 
 .text .char.correct { color: var(--indigo-soft); }

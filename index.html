@@ -22,6 +22,8 @@
       <div class="divider" aria-hidden="true"></div>
       <div class="group" id="group-option"></div>
       <div class="spacer"></div>
+      <div class="group" id="group-layout"></div>
+      <div class="divider" aria-hidden="true"></div>
       <div class="group" id="group-language"></div>
     </nav>
 
@@ -46,8 +48,10 @@
     </section>
 
     <!-- Typing area -->
-    <div class="stage">
-      <p id="text" class="text"></p>
+    <div class="stage" id="stage" data-layout="focus">
+      <div class="stage-inner" id="stage-inner">
+        <p id="text" class="text"></p>
+      </div>
       <div class="overlay" id="overlay" hidden>
         <button class="overlay-btn" id="start-btn">start test</button>
         <p class="overlay-hint">or press <kbd>tab</kbd></p>

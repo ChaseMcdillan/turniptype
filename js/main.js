@@ -3,6 +3,8 @@ import { createEngine } from "./engine.js";
 
 const engine = createEngine();
 
+const stageEl = document.getElementById("stage");
+const stageInner = document.getElementById("stage-inner");
 const textEl = document.getElementById("text");
 const inputEl = document.getElementById("input");
 const overlay = document.getElementById("overlay");
@@ -12,12 +14,8 @@ const wpmEl = document.getElementById("wpm");
 const accuracyEl = document.getElementById("accuracy");
 const timeEl = document.getElementById("time");
 const timeLabelEl = document.getElementById("time-label");
-const recordEl = document.getElementById("record");
 
 let tickInterval = null;
-
-// Line height of .text in pixels — must match CSS (2.4rem ≈ 38.4px)
-const LINE_HEIGHT = 38;
 
 // ── Rendering ──
 
@@ -47,10 +45,35 @@ function renderText() {
 function scrollCurrentIntoView() {
   const cur = textEl.querySelector(".current");
   if (!cur) return;
-  const curTop = cur.offsetTop - textEl.offsetTop;
-  const visibleLine = Math.floor(curTop / LINE_HEIGHT);
-  const targetLine = Math.max(0, visibleLine - 1);
-  textEl.style.transform = `translateY(-${targetLine * LINE_HEIGHT}px)`;
+
+  if (config.layout === "scroll") {
+    // native scroll — let the browser keep the current char visible
+    cur.scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
+
+  // focus layout — translate the text block so the current line sits on line 2
+  const stageRect = stageEl.getBoundingClientRect();
+  const curRect = cur.getBoundingClientRect();
+  const style = getComputedStyle(textEl);
+  const lineHeight = parseFloat(style.lineHeight) || 38;
+
+  // how far the current char is from the top of the visible stage
+  const offsetInStage = curRect.top - stageRect.top;
+
+  // keep it on the 2nd line of the window
+  const keepOnLine = lineHeight; // 1 line down from top
+  let shift = parseFloat(textEl.dataset.shift || "0");
+
+  if (offsetInStage > keepOnLine) {
+    shift += offsetInStage - keepOnLine;
+  } else if (offsetInStage < 0) {
+    shift = Math.max(0, shift + offsetInStage);
+  }
+
+  shift = Math.max(0, shift);
+  textEl.dataset.shift = String(shift);
+  textEl.style.transform = `translateY(-${shift}px)`;
 }
 
 function renderStats() {
@@ -60,7 +83,6 @@ function renderStats() {
   wpmEl.textContent = s.wpm;
   accuracyEl.textContent = s.accuracy;
 
-  // Time mode counts down; other modes count up
   if (state?.config?.mode === "time" && state.timeLimit) {
     const remaining = Math.max(0, state.timeLimit - s.time);
     timeEl.textContent = remaining;
@@ -84,7 +106,9 @@ function loadNewTest() {
   inputEl.value = "";
   inputEl.disabled = true;
   overlay.hidden = false;
+  textEl.dataset.shift = "0";
   textEl.style.transform = "translateY(0)";
+  if (stageEl.dataset.layout === "scroll") stageEl.scrollTop = 0;
   renderAll();
 }
 
@@ -126,6 +150,14 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// Re-render when layout changes (so scroll/focus behaves immediately)
+window.addEventListener("tt:layout", () => {
+  textEl.dataset.shift = "0";
+  textEl.style.transform = "translateY(0)";
+  if (stageEl.dataset.layout === "scroll") stageEl.scrollTop = 0;
+  renderText();
+});
+
 // ── Boot ──
 
 engine.onChange(() => {
@@ -138,5 +170,9 @@ engine.onChange(() => {
   }
 });
 
-initToolbar(loadNewTest);
+initToolbar(() => {
+  // fires on any toolbar change
+  loadNewTest();
+  window.dispatchEvent(new Event("tt:layout"));
+});
 loadNewTest();

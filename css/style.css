@@ -127,12 +127,34 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* Stage — fixed height + scroll */
+/* ── Stage ── */
+
 .stage {
   position: relative;
   height: 220px;
+  border-radius: 10px;
+}
+
+/* Focus layout: hide overflow, JS translates the inner block */
+.stage[data-layout="focus"] {
   overflow: hidden;
 }
+
+/* Scroll layout: real scrollbar, text flows naturally */
+.stage[data-layout="scroll"] {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.stage[data-layout="scroll"]::-webkit-scrollbar { width: 8px; }
+.stage[data-layout="scroll"]::-webkit-scrollbar-track { background: transparent; }
+.stage[data-layout="scroll"]::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.stage-inner { position: relative; }
 
 .text {
   font-family: "JetBrains Mono", monospace;
@@ -141,12 +163,18 @@ body {
   color: var(--muted);
   user-select: none;
   letter-spacing: -0.01em;
-  transition: transform 0.15s ease;
+  padding: 0.2rem 0;
 }
+.stage[data-layout="focus"] .text { transition: transform 0.15s ease; }
+
 .text span { transition: color 0.05s linear; }
 .text span.correct { color: var(--indigo-soft); }
 .text span.wrong   { color: var(--error); }
-.text span.current { border-bottom: 2px solid var(--indigo); padding-bottom: 1px; }
+.text span.current {
+  border-bottom: 2px solid var(--indigo);
+  padding-bottom: 1px;
+  scroll-margin: 90px;
+}
 
 /* Start overlay */
 .overlay {

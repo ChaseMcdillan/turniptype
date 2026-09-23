@@ -2,7 +2,6 @@
 // TurnipType — single-file app
 // ─────────────────────────────────────────────────────────────
 
-// ── Word + quote data ──
 const WORDS = {
   en: "the be to of and a in that have i it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us".split(" "),
   es: "el la de que y a en un ser se no haber por con su para como estar tener le lo todo pero mas hacer o poder decir este ir otro ese si me ya ver porque dar cuando muy sin vez mucho saber que sobre mi alguno mismo yo tambien hasta ano dos querer entre asi primero desde grande eso ni nos lleg".split(" "),
@@ -58,14 +57,12 @@ function randomQuote(kind) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ── App state ──
 const config = { mode: "time", option: 30, language: "en" };
 const test = {
   text: "", typed: "", startedAt: null, endedAt: null, finished: false,
   timeLimit: null, samples: [], lastSampleAt: null,
 };
 
-// ── DOM ──
 const $ = (id) => document.getElementById(id);
 const modeGroup = $("group-mode");
 const optionGroup = $("group-option");
@@ -96,7 +93,6 @@ const liveUI = [
 
 let tickInterval = null;
 
-// ── Storage ──
 function recordKey() {
   return `tt.best.${config.mode}.${config.option}.${config.language}`;
 }
@@ -112,7 +108,6 @@ function refreshRecordDisplay() {
   recordEl.textContent = r ?? "—";
 }
 
-// ── Toolbar ──
 function buildToolbar() {
   MODES.forEach((m) => {
     const btn = document.createElement("button");
@@ -180,7 +175,6 @@ function highlight() {
   });
 }
 
-// ── Test loading ──
 function loadNewTest() {
   clearInterval(tickInterval);
   resultsEl.hidden = true;
@@ -219,10 +213,6 @@ function loadNewTest() {
   renderAll();
 }
 
-// ── Rendering ──
-// Words are inline-block so they never break mid-word.
-// The space BETWEEN words lives outside .word so it renders as a real gap
-// and gives the browser a break opportunity.
 function buildTextHTML(text, typed) {
   const words = text.split(" ");
   let charIndex = 0;
@@ -241,12 +231,11 @@ function buildTextHTML(text, typed) {
     html += `</span>`;
 
     if (wi < words.length - 1) {
-      // the space belongs to the text position, but sits OUTSIDE the word span
       const ch = " ";
       let cls = "";
       if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
       else if (charIndex === typed.length) cls = "current";
-      html += `<span class="char space ${cls}">&nbsp;</span>`;
+      html += `<span class="char space ${cls}"> </span>`;
       charIndex++;
     }
   });
@@ -280,7 +269,6 @@ function scrollCurrentIntoView() {
   textEl.style.transform = `translateY(-${shift}px)`;
 }
 
-// ── Stats ──
 function computeStats() {
   if (!test.startedAt) return { wpm: 0, raw: 0, accuracy: 100, time: 0, correct: 0, wrong: 0, consistency: 0, burst: 0 };
   const end = test.endedAt ?? Date.now();
@@ -328,7 +316,6 @@ function renderAll() {
   renderStats();
 }
 
-// ── Results screen ──
 function drawGraph(samples) {
   const W = 600, H = 160, pad = 12;
   graphSvg.innerHTML = "";
@@ -409,7 +396,6 @@ function showResults() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// ── Test flow ──
 function startTest() {
   if (test.startedAt) return;
   overlay.hidden = true;
@@ -464,7 +450,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { e.preventDefault(); loadNewTest(); }
 });
 
-// ── Boot ──
 buildToolbar();
 renderOptions();
 loadNewTest();

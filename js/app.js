@@ -79,8 +79,39 @@ const wpmEl = $("wpm");
 const accuracyEl = $("accuracy");
 const timeEl = $("time");
 const timeLabelEl = $("time-label");
+const recordEl = $("record");
+const resultsEl = $("results");
+const graphSvg = $("graph");
+const badgeEl = $("r-badge");
+const againBtn = $("r-again");
+const changeBtn = $("r-change");
+
+// Toolbar/footer blocks to hide while results are showing
+const liveUI = [
+  document.querySelector(".toolbar"),
+  document.querySelector(".stats"),
+  document.querySelector(".stage"),
+  document.querySelector(".input"),
+  document.querySelector(".footer"),
+];
 
 let tickInterval = null;
+
+// ── Storage ──
+function recordKey() {
+  return `tt.best.${config.mode}.${config.option}.${config.language}`;
+}
+function getRecord() {
+  const v = localStorage.getItem(recordKey());
+  return v ? Number(v) : null;
+}
+function setRecord(wpm) {
+  localStorage.setItem(recordKey(), String(wpm));
+}
+function refreshRecordDisplay() {
+  const r = getRecord();
+  recordEl.textContent = r ?? "—";
+}
 
 // ── Toolbar ──
 function buildToolbar() {
@@ -153,6 +184,9 @@ function highlight() {
 // ── Test loading ──
 function loadNewTest() {
   clearInterval(tickInterval);
+  resultsEl.hidden = true;
+  liveUI.forEach((el) => el && (el.hidden = false));
+
   let text = "";
   let timeLimit = null;
 
@@ -181,13 +215,12 @@ function loadNewTest() {
   overlay.hidden = false;
   textEl.style.transform = "translateY(0)";
   textEl.dataset.shift = "0";
+
+  refreshRecordDisplay();
   renderAll();
 }
 
 // ── Rendering ──
-
-// Build the inner HTML so words wrap as whole units, never mid-word.
-// Each word is wrapped in .word; each char in .char.
 function buildTextHTML(text, typed) {
   const words = text.split(" ");
   let charIndex = 0;
@@ -198,23 +231,16 @@ function buildTextHTML(text, typed) {
     for (let i = 0; i < word.length; i++) {
       const ch = word[i];
       let cls = "";
-      if (charIndex < typed.length) {
-        cls = typed[charIndex] === ch ? "correct" : "wrong";
-      } else if (charIndex === typed.length) {
-        cls = "current";
-      }
+      if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
+      else if (charIndex === typed.length) cls = "current";
       html += `<span class="char ${cls}">${ch}</span>`;
       charIndex++;
     }
-    // the space after the word (except the last)
     if (wi < words.length - 1) {
       const ch = " ";
       let cls = "";
-      if (charIndex < typed.length) {
-        cls = typed[charIndex] === ch ? "correct" : "wrong";
-      } else if (charIndex === typed.length) {
-        cls = "current";
-      }
+      if (charIndex < typed.length) cls = typed[charIndex] === ch ? "correct" : "wrong";
+      else if (charIndex === typed.length) cls = "current";
       html += `<span class="char ${cls}"> </span>`;
       charIndex++;
     }
@@ -250,16 +276,36 @@ function scrollCurrentIntoView() {
   textEl.style.transform = `translateY(-${shift}px)`;
 }
 
+// ── Stats ──
 function computeStats() {
-  if (!test.startedAt) return { wpm: 0, accuracy: 100, time: 0 };
+  if (!test.startedAt) return { wpm: 0, raw: 0, accuracy: 100, time: 0, correct: 0, wrong: 0, consistency: 0, burst: 0 };
   const end = test.endedAt ?? Date.now();
   const minutes = (end - test.startedAt) / 60000;
   let correct = 0;
   for (let i = 0; i < test.typed.length; i++) if (test.typed[i] === test.text[i]) correct++;
+  const wrong = test.typed.length - correct;
   const wpm = minutes > 0 ? Math.round(correct / 5 / minutes) : 0;
+  const raw = minutes > 0 ? Math.round(test.typed.length / 5 / minutes) : 0;
   const accuracy = test.typed.length === 0 ? 100 : Math.round((correct / test.typed.length) * 100);
-  const time = Math.round((end - test.startedAt) / 1000);
-  return { wpm, accuracy, time };
+
+  // consistency = 100 - coefficient of variation of samples
+  const wpms = test.samples.map((s) => s.wpm).filter((n) => n > 0);
+  let consistency = 0;
+  if (wpms.length > 1) {
+    const mean = wpms.reduce((a, b) => a + b, 0) / wpms.length;
+    const variance = wpms.reduce((a, b) => a + (b - mean) ** 2, 0) / wpms.length;
+    const std = Math.sqrt(variance);
+    consistency = mean > 0 ? Math.max(0, Math.round(100 - (std / mean) * 100)) : 0;
+  }
+
+  // burst = highest single sample
+  const burst = wpms.length ? Math.max(...wpms) : 0;
+
+  return {
+    wpm, raw, accuracy,
+    time: Math.round((end - test.startedAt) / 1000),
+    correct, wrong, consistency, burst,
+  };
 }
 
 function renderStats() {
@@ -280,57 +326,66 @@ function renderAll() {
   renderStats();
 }
 
-// ── Test flow ──
-function startTest() {
-  if (test.startedAt) return;
-  overlay.hidden = true;
-  inputEl.disabled = false;
-  inputEl.focus();
-  test.startedAt = Date.now();
-  test.lastSampleAt = test.startedAt;
-  tickInterval = setInterval(tick, 100);
-}
+// ── Results screen ──
+function drawGraph(samples) {
+  const W = 600, H = 160, pad = 12;
+  graphSvg.innerHTML = "";
 
-function tick() {
-  if (test.finished || !test.startedAt) return;
-  const now = Date.now();
-  if (now - test.lastSampleAt >= 1000) {
-    const minutes = (now - test.startedAt) / 60000;
-    const wpm = minutes > 0 ? Math.round(test.typed.length / 5 / minutes) : 0;
-    test.samples.push({ t: Math.round((now - test.startedAt) / 1000), wpm });
-    test.lastSampleAt = now;
+  if (!samples || samples.length < 2) {
+    graphSvg.innerHTML = `<text x="300" y="85" text-anchor="middle" fill="#6b6b78" font-family="Inter" font-size="12">not enough data</text>`;
+    return;
   }
-  if (test.timeLimit && (now - test.startedAt) / 1000 >= test.timeLimit) finishTest();
-  renderAll();
+
+  const values = samples.map((s) => s.wpm);
+  const maxV = Math.max(...values, 1);
+  const minV = 0;
+  const range = maxV - minV || 1;
+
+  const xs = samples.map((s, i) => pad + (i / (samples.length - 1)) * (W - pad * 2));
+  const ys = samples.map((s) => H - pad - ((s.wpm - minV) / range) * (H - pad * 2));
+
+  // Grid lines (3 horizontal)
+  let grid = "";
+  for (let i = 0; i <= 3; i++) {
+    const y = pad + (i / 3) * (H - pad * 2);
+    grid += `<line x1="${pad}" y1="${y}" x2="${W - pad}" y2="${y}" stroke="#26262e" stroke-width="1" />`;
+  }
+
+  const linePath = xs.map((x, i) => `${i === 0 ? "M" : "L"} ${x} ${ys[i]}`).join(" ");
+
+  // Fill under line
+  const fillPath =
+    `M ${xs[0]} ${H - pad} ` +
+    xs.map((x, i) => `L ${x} ${ys[i]}`).join(" ") +
+    ` L ${xs[xs.length - 1]} ${H - pad} Z`;
+
+  // Dots on each sample
+  const dots = xs.map((x, i) =>
+    `<circle cx="${x}" cy="${ys[i]}" r="2.5" fill="#818cf8" />`
+  ).join("");
+
+  // Labels
+  const maxLabel = `<text x="${pad}" y="${pad + 10}" fill="#6b6b78" font-family="JetBrains Mono" font-size="10">${maxV}</text>`;
+  const endLabel = `<text x="${W - pad}" y="${H - pad - 4}" fill="#6b6b78" font-family="JetBrains Mono" font-size="10" text-anchor="end">${samples.length}s</text>`;
+
+  graphSvg.innerHTML = `
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35" />
+        <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    ${grid}
+    <path d="${fillPath}" fill="url(#grad)" />
+    <path d="${linePath}" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    ${dots}
+    ${maxLabel}
+    ${endLabel}
+  `;
 }
 
-function finishTest() {
-  if (test.finished) return;
-  test.finished = true;
-  test.endedAt = Date.now();
-  clearInterval(tickInterval);
-  inputEl.disabled = true;
-  console.log("test finished:", computeStats(), "samples:", test.samples);
-}
+function showResults() {
+  const s = computeStats();
 
-inputEl.addEventListener("input", () => {
-  if (test.finished) return;
-  if (!test.startedAt) startTest();
-  test.typed = inputEl.value;
-  renderText();
-  renderStats();
-  if (!test.timeLimit && test.typed.length >= test.text.length) finishTest();
-});
-
-startBtn.addEventListener("click", startTest);
-resetBtn.addEventListener("click", loadNewTest);
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Tab") { e.preventDefault(); inputEl.focus(); }
-  if (e.key === "Escape") { e.preventDefault(); loadNewTest(); }
-});
-
-// ── Boot ──
-buildToolbar();
-renderOptions();
-loadNewTest();
+  // hide live UI, show results
+  liveUI.forEach((el) => el && (

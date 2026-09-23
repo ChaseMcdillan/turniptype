@@ -16,7 +16,6 @@
       <p class="tagline">a minimal typing test · built by Chase McDillan</p>
     </header>
 
-    <!-- Mode selector bar -->
     <nav class="toolbar" id="toolbar" aria-label="Test mode">
       <div class="group" id="group-mode"></div>
       <div class="divider" aria-hidden="true"></div>
@@ -25,7 +24,6 @@
       <div class="group" id="group-language"></div>
     </nav>
 
-    <!-- Stats -->
     <section class="stats">
       <div class="stat">
         <span class="stat-value" id="wpm">0</span>
@@ -45,7 +43,6 @@
       </div>
     </section>
 
-    <!-- Typing area -->
     <div class="stage">
       <p id="text" class="text"></p>
       <div class="overlay" id="overlay" hidden>
@@ -76,6 +73,39 @@
         by <a href="https://github.com/ChaseMcDillan" target="_blank" rel="noopener">Chase McDillan</a>
       </span>
     </footer>
+
+    <!-- ── Results screen ── -->
+    <section class="results" id="results" hidden>
+      <div class="results-head">
+        <div class="big-stat">
+          <span class="big-value" id="r-wpm">0</span>
+          <span class="big-label">wpm</span>
+        </div>
+        <div class="big-stat">
+          <span class="big-value" id="r-acc">0</span>
+          <span class="big-label">accuracy</span>
+        </div>
+        <div class="badge" id="r-badge" hidden>new best</div>
+      </div>
+
+      <div class="graph-wrap">
+        <svg id="graph" viewBox="0 0 600 160" preserveAspectRatio="none" aria-label="WPM over time"></svg>
+      </div>
+
+      <div class="grid">
+        <div class="cell"><span class="cell-value" id="r-raw">0</span><span class="cell-label">raw wpm</span></div>
+        <div class="cell"><span class="cell-value" id="r-burst">0</span><span class="cell-label">burst</span></div>
+        <div class="cell"><span class="cell-value" id="r-consistency">0</span><span class="cell-label">consistency</span></div>
+        <div class="cell"><span class="cell-value" id="r-correct">0</span><span class="cell-label">correct chars</span></div>
+        <div class="cell"><span class="cell-value" id="r-wrong">0</span><span class="cell-label">wrong chars</span></div>
+        <div class="cell"><span class="cell-value" id="r-time">0</span><span class="cell-label">seconds</span></div>
+      </div>
+
+      <div class="results-actions">
+        <button class="reset" id="r-again" type="button">try again</button>
+        <button class="reset ghost" id="r-change" type="button">change mode</button>
+      </div>
+    </section>
   </main>
 
   <script src="js/app.js"></script>

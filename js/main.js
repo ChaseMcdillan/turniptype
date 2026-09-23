@@ -11,9 +11,13 @@ const resetBtn = document.getElementById("reset");
 const wpmEl = document.getElementById("wpm");
 const accuracyEl = document.getElementById("accuracy");
 const timeEl = document.getElementById("time");
+const timeLabelEl = document.getElementById("time-label");
 const recordEl = document.getElementById("record");
 
 let tickInterval = null;
+
+// Line height of .text in pixels — must match CSS (2.4rem ≈ 38.4px)
+const LINE_HEIGHT = 38;
 
 // ── Rendering ──
 
@@ -36,13 +40,35 @@ function renderText() {
       return `<span class="${cls}">${display}</span>`;
     })
     .join("");
+
+  scrollCurrentIntoView();
+}
+
+function scrollCurrentIntoView() {
+  const cur = textEl.querySelector(".current");
+  if (!cur) return;
+  const curTop = cur.offsetTop - textEl.offsetTop;
+  const visibleLine = Math.floor(curTop / LINE_HEIGHT);
+  const targetLine = Math.max(0, visibleLine - 1);
+  textEl.style.transform = `translateY(-${targetLine * LINE_HEIGHT}px)`;
 }
 
 function renderStats() {
   const s = engine.stats();
+  const state = engine.getState();
+
   wpmEl.textContent = s.wpm;
   accuracyEl.textContent = s.accuracy;
-  timeEl.textContent = s.time;
+
+  // Time mode counts down; other modes count up
+  if (state?.config?.mode === "time" && state.timeLimit) {
+    const remaining = Math.max(0, state.timeLimit - s.time);
+    timeEl.textContent = remaining;
+    timeLabelEl.textContent = "remaining";
+  } else {
+    timeEl.textContent = s.time;
+    timeLabelEl.textContent = "seconds";
+  }
 }
 
 function renderAll() {
@@ -58,6 +84,7 @@ function loadNewTest() {
   inputEl.value = "";
   inputEl.disabled = true;
   overlay.hidden = false;
+  textEl.style.transform = "translateY(0)";
   renderAll();
 }
 
@@ -101,7 +128,6 @@ document.addEventListener("keydown", (e) => {
 
 // ── Boot ──
 
-// engine emits state changes → re-render
 engine.onChange(() => {
   renderAll();
   const s = engine.getState();

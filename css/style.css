@@ -1,4 +1,3 @@
-
 :root {
   --bg: #0e0e11;
   --surface: #17171c;
@@ -128,18 +127,21 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* Stage */
+/* Stage — fixed height + scroll */
 .stage {
   position: relative;
-  min-height: 140px;
+  height: 220px;
+  overflow: hidden;
 }
+
 .text {
   font-family: "JetBrains Mono", monospace;
   font-size: 1.35rem;
-  line-height: 1.85;
+  line-height: 2.4rem;
   color: var(--muted);
   user-select: none;
   letter-spacing: -0.01em;
+  transition: transform 0.15s ease;
 }
 .text span { transition: color 0.05s linear; }
 .text span.correct { color: var(--indigo-soft); }
@@ -223,3 +225,16 @@ body {
   border-radius: 4px;
   color: var(--muted);
 }
+
+.credit {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-left: auto;
+}
+.credit a {
+  color: var(--indigo-soft);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.credit a:hover { border-color: var(--indigo-soft); }

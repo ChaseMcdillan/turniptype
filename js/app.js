@@ -185,20 +185,47 @@ function loadNewTest() {
 }
 
 // ── Rendering ──
-function renderText() {
-  const typed = test.typed;
-  textEl.innerHTML = test.text
-    .split("")
-    .map((ch, i) => {
-      const cls =
-        i < typed.length
-          ? typed[i] === ch ? "correct" : "wrong"
-          : i === typed.length ? "current" : "";
-      const display = ch === " " ? "&nbsp;" : ch;
-      return `<span class="${cls}">${display}</span>`;
-    })
-    .join("");
 
+// Build the inner HTML so words wrap as whole units, never mid-word.
+// Each word is wrapped in .word; each char in .char.
+function buildTextHTML(text, typed) {
+  const words = text.split(" ");
+  let charIndex = 0;
+  let html = "";
+
+  words.forEach((word, wi) => {
+    html += `<span class="word">`;
+    for (let i = 0; i < word.length; i++) {
+      const ch = word[i];
+      let cls = "";
+      if (charIndex < typed.length) {
+        cls = typed[charIndex] === ch ? "correct" : "wrong";
+      } else if (charIndex === typed.length) {
+        cls = "current";
+      }
+      html += `<span class="char ${cls}">${ch}</span>`;
+      charIndex++;
+    }
+    // the space after the word (except the last)
+    if (wi < words.length - 1) {
+      const ch = " ";
+      let cls = "";
+      if (charIndex < typed.length) {
+        cls = typed[charIndex] === ch ? "correct" : "wrong";
+      } else if (charIndex === typed.length) {
+        cls = "current";
+      }
+      html += `<span class="char ${cls}"> </span>`;
+      charIndex++;
+    }
+    html += `</span>`;
+  });
+
+  return html;
+}
+
+function renderText() {
+  textEl.innerHTML = buildTextHTML(test.text, test.typed);
   scrollCurrentIntoView();
 }
 
@@ -211,10 +238,7 @@ function scrollCurrentIntoView() {
   const stageRect = stageEl.getBoundingClientRect();
   const curRect = cur.getBoundingClientRect();
 
-  // distance from the top of the visible window to the current char
   const offset = curRect.top - stageRect.top;
-
-  // keep the current line on line 2 of the window
   const targetY = lineHeight * 1;
   let shift = parseFloat(textEl.dataset.shift || "0");
 

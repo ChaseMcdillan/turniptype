@@ -33,6 +33,7 @@ body {
   gap: 2rem;
 }
 
+/* Header */
 .header { display: flex; flex-direction: column; gap: 0.35rem; }
 .logo {
   font-family: "JetBrains Mono", monospace;
@@ -43,6 +44,7 @@ body {
 .logo span { color: var(--indigo); }
 .tagline { font-size: 0.8rem; color: var(--muted); }
 
+/* Toolbar */
 .toolbar {
   display: flex;
   align-items: center;
@@ -57,6 +59,7 @@ body {
 .divider { width: 1px; height: 22px; background: var(--border); }
 .spacer { flex: 1; }
 
+/* Chips */
 .chip {
   font-family: "Inter", sans-serif;
   font-size: 0.82rem;
@@ -85,6 +88,7 @@ body {
   padding: 0.35rem 0.6rem;
 }
 
+/* Select */
 .select {
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;
@@ -98,6 +102,7 @@ body {
 }
 .select:focus { border-color: var(--indigo); }
 
+/* Stats */
 .stats {
   display: flex;
   gap: 2.5rem;
@@ -141,8 +146,11 @@ body {
   will-change: transform;
 }
 
+/* Words are inline-block units — no mid-word breaks.
+   The space BETWEEN words is a .char.space sitting outside the .word span. */
 .text .word { display: inline-block; white-space: nowrap; }
 .text .char { display: inline; }
+.text .char.space { display: inline; white-space: pre; }
 
 .text .char.correct { color: var(--indigo-soft); }
 .text .char.wrong   { color: var(--error); }
@@ -151,6 +159,7 @@ body {
   padding-bottom: 1px;
 }
 
+/* Start overlay */
 .overlay {
   position: absolute;
   inset: 0;
@@ -180,6 +189,7 @@ body {
 .overlay-btn:hover { background: var(--indigo-soft); }
 .overlay-hint { font-size: 0.75rem; color: var(--muted); }
 
+/* Input */
 .input {
   font-family: "JetBrains Mono", monospace;
   font-size: 1rem;
@@ -196,6 +206,7 @@ body {
 .input:focus { border-color: var(--indigo); }
 .input:disabled { opacity: 0.4; }
 
+/* Footer */
 .footer {
   display: flex;
   align-items: center;
@@ -349,3 +360,4 @@ body {
   .big-value { font-size: 2.5rem; }
   .results-head { gap: 1.5rem; }
 }
+.text .word { display: inline-block; white-space: nowrap; margin-right: -0.05em; }

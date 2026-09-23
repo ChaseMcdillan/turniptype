@@ -86,7 +86,6 @@ const badgeEl = $("r-badge");
 const againBtn = $("r-again");
 const changeBtn = $("r-change");
 
-// Toolbar/footer blocks to hide while results are showing
 const liveUI = [
   document.querySelector(".toolbar"),
   document.querySelector(".stats"),
@@ -288,7 +287,6 @@ function computeStats() {
   const raw = minutes > 0 ? Math.round(test.typed.length / 5 / minutes) : 0;
   const accuracy = test.typed.length === 0 ? 100 : Math.round((correct / test.typed.length) * 100);
 
-  // consistency = 100 - coefficient of variation of samples
   const wpms = test.samples.map((s) => s.wpm).filter((n) => n > 0);
   let consistency = 0;
   if (wpms.length > 1) {
@@ -298,7 +296,6 @@ function computeStats() {
     consistency = mean > 0 ? Math.max(0, Math.round(100 - (std / mean) * 100)) : 0;
   }
 
-  // burst = highest single sample
   const burst = wpms.length ? Math.max(...wpms) : 0;
 
   return {
@@ -341,10 +338,9 @@ function drawGraph(samples) {
   const minV = 0;
   const range = maxV - minV || 1;
 
-  const xs = samples.map((s, i) => pad + (i / (samples.length - 1)) * (W - pad * 2));
+  const xs = samples.map((_, i) => pad + (i / (samples.length - 1)) * (W - pad * 2));
   const ys = samples.map((s) => H - pad - ((s.wpm - minV) / range) * (H - pad * 2));
 
-  // Grid lines (3 horizontal)
   let grid = "";
   for (let i = 0; i <= 3; i++) {
     const y = pad + (i / 3) * (H - pad * 2);
@@ -353,18 +349,13 @@ function drawGraph(samples) {
 
   const linePath = xs.map((x, i) => `${i === 0 ? "M" : "L"} ${x} ${ys[i]}`).join(" ");
 
-  // Fill under line
   const fillPath =
     `M ${xs[0]} ${H - pad} ` +
     xs.map((x, i) => `L ${x} ${ys[i]}`).join(" ") +
     ` L ${xs[xs.length - 1]} ${H - pad} Z`;
 
-  // Dots on each sample
-  const dots = xs.map((x, i) =>
-    `<circle cx="${x}" cy="${ys[i]}" r="2.5" fill="#818cf8" />`
-  ).join("");
+  const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="2.5" fill="#818cf8" />`).join("");
 
-  // Labels
   const maxLabel = `<text x="${pad}" y="${pad + 10}" fill="#6b6b78" font-family="JetBrains Mono" font-size="10">${maxV}</text>`;
   const endLabel = `<text x="${W - pad}" y="${H - pad - 4}" fill="#6b6b78" font-family="JetBrains Mono" font-size="10" text-anchor="end">${samples.length}s</text>`;
 
@@ -387,5 +378,89 @@ function drawGraph(samples) {
 function showResults() {
   const s = computeStats();
 
-  // hide live UI, show results
-  liveUI.forEach((el) => el && (
+  liveUI.forEach((el) => el && (el.hidden = true));
+  resultsEl.hidden = false;
+
+  $("r-wpm").textContent = s.wpm;
+  $("r-acc").textContent = s.accuracy + "%";
+  $("r-raw").textContent = s.raw;
+  $("r-burst").textContent = s.burst;
+  $("r-consistency").textContent = s.consistency + "%";
+  $("r-correct").textContent = s.correct;
+  $("r-wrong").textContent = s.wrong;
+  $("r-time").textContent = s.time;
+
+  // personal best?
+  const prev = getRecord();
+  const isBest = s.wpm > 0 && (prev === null || s.wpm > prev);
+  if (isBest) {
+    setRecord(s.wpm);
+    badgeEl.hidden = false;
+  } else {
+    badgeEl.hidden = true;
+  }
+  refreshRecordDisplay();
+
+  drawGraph(test.samples);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ── Test flow ──
+function startTest() {
+  if (test.startedAt) return;
+  overlay.hidden = true;
+  inputEl.disabled = false;
+  inputEl.focus();
+  test.startedAt = Date.now();
+  test.lastSampleAt = test.startedAt;
+  tickInterval = setInterval(tick, 100);
+}
+
+function tick() {
+  if (test.finished || !test.startedAt) return;
+  const now = Date.now();
+  if (now - test.lastSampleAt >= 1000) {
+    const minutes = (now - test.startedAt) / 60000;
+    const wpm = minutes > 0 ? Math.round(test.typed.length / 5 / minutes) : 0;
+    test.samples.push({ t: Math.round((now - test.startedAt) / 1000), wpm });
+    test.lastSampleAt = now;
+  }
+  if (test.timeLimit && (now - test.startedAt) / 1000 >= test.timeLimit) finishTest();
+  renderAll();
+}
+
+function finishTest() {
+  if (test.finished) return;
+  test.finished = true;
+  test.endedAt = Date.now();
+  clearInterval(tickInterval);
+  inputEl.disabled = true;
+  showResults();
+}
+
+inputEl.addEventListener("input", () => {
+  if (test.finished) return;
+  if (!test.startedAt) startTest();
+  test.typed = inputEl.value;
+  renderText();
+  renderStats();
+  if (!test.timeLimit && test.typed.length >= test.text.length) finishTest();
+});
+
+startBtn.addEventListener("click", startTest);
+resetBtn.addEventListener("click", loadNewTest);
+againBtn.addEventListener("click", loadNewTest);
+changeBtn.addEventListener("click", () => {
+  loadNewTest();
+  document.querySelector(".toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") { e.preventDefault(); inputEl.focus(); }
+  if (e.key === "Escape") { e.preventDefault(); loadNewTest(); }
+});
+
+// ── Boot ──
+buildToolbar();
+renderOptions();
+loadNewTest();

@@ -361,3 +361,8 @@ body {
   .results-head { gap: 1.5rem; }
 }
 .text .word { display: inline-block; white-space: nowrap; margin-right: -0.05em; }
+.text .char.space {
+  display: inline;
+  white-space: pre;
+  letter-spacing: -0.05em;
+}
